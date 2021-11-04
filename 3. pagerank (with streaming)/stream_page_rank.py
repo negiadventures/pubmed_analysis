@@ -19,7 +19,6 @@ def main(input_folder_location):
     contribs = counts.join(ranks).flatMap(lambda row: computeContribs(row[1][0], row[1][1]))
     print(" iter ---------")
     ranks = contribs.reduceByKey(lambda v1, v2: v1 + v2)
-    ranks
     ranks.pprint()
     print(" finishing the task")
     ssc.start()
