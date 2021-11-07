@@ -11,6 +11,11 @@ from kafka import KafkaConsumer
 
 
 def process_xml_csv(file_url):
+    '''
+    Reads an xml.gz file from the url, converts into dataframe by extracting required fields.
+    :param file_url: file path (url) where it exists
+    :return: dataframe parsed from xml
+    '''
     tree = ET.parse(gzip.GzipFile(fileobj=io.BytesIO(urlopen(file_url).read())))
     pd.set_option('display.max_columns', None)
     dict_list = []
@@ -120,6 +125,11 @@ def process_xml_csv(file_url):
 
 
 def data_graph(df):
+    '''
+    Generates edge network dataframe from using PMID (pubmed id) and reference_ids(comma separated pubmed ids of other citations) as Source and Target nodes respectively.
+    :param df: dataframe to process
+    :return: edge network dataframe
+    '''
     df = df[['pmid', 'reference_ids']]
     df = df[df['reference_ids'] != '']
     df = df.drop('reference_ids', axis=1).join(df['reference_ids'].str.split(',', expand=True).stack().reset_index(drop=True, level=1).rename('Target')).apply(lambda x: x.str.strip())
@@ -128,15 +138,17 @@ def data_graph(df):
     return df
 
 
-consumer = KafkaConsumer('file_links', bootstrap_servers=['localhost:9092'],group_id='grp1')
-for msg in consumer:
-    # print(msg.value)
+# kafka consumer, that listens file_links topic for any new message
+consumer = KafkaConsumer('file_links', bootstrap_servers=['localhost:9092'], group_id='grp1')
 
+for msg in consumer:
+    # processes each message in the topic
     url = msg.value.decode('UTF-8')
     file_name = url.split('/')[len(url.split('/')) - 1].strip('.xml.gz')
+    # converts xml to csv
     df = process_xml_csv(url)
     df.to_csv('csv_data/' + file_name + '.csv', header=True, index=False)
-
+    # converts data to graph - edge network
     df_graph = data_graph(df)
     df_graph.to_csv('graph_data/' + file_name + '_graph.csv', header=True, index=False)
     # Clean graph data

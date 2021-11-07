@@ -6,6 +6,10 @@ import pandas as pd
 import spacy
 from gensim.utils import simple_preprocess
 from nltk.corpus import stopwords
+from sklearn.manifold import TSNE
+from bokeh.plotting import figure, output_file, show
+import numpy as np
+import matplotlib.colors as mcolors
 
 df = pd.read_csv('../../pubmed sample data.csv')
 stop_words = stopwords.words('english')
@@ -61,11 +65,6 @@ corpus = [id2word.doc2bow(text) for text in data_ready]
 lda_model = gensim.models.ldamodel.LdaModel(corpus=corpus, id2word=id2word, num_topics=10, random_state=100, update_every=1, chunksize=10, passes=10, alpha='symmetric', iterations=100,
                                             per_word_topics=True)
 
-# Get topic weights and dominant topics ------------
-from sklearn.manifold import TSNE
-from bokeh.plotting import figure, output_file, show
-import numpy as np
-import matplotlib.colors as mcolors
 
 # Get topic weights
 topic_weights = []
