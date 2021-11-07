@@ -10,7 +10,7 @@ def computeContribs(neighbors, rank):
 
 def main(input_folder_location):
     sc = SparkContext.getOrCreate()
-    ssc = StreamingContext(sc, 3)  # Streaming will execute in each 3 seconds
+    ssc = StreamingContext(sc, 20)  # Streaming will execute in each 3 seconds
     lines = ssc.textFileStream(input_folder_location)  #directory name
     counts = lines.map(lambda line: line.split(",")).map(lambda pages: (pages[0], pages[1])).transform(lambda rdd: rdd.distinct()).groupByKey().map(lambda x: (x[0], list(x[1])))
     ranks = counts.map(lambda element: (element[0], 1.0))
@@ -18,6 +18,7 @@ def main(input_folder_location):
     print(" iter")
     ranks = contribs.reduceByKey(lambda v1, v2: v1 + v2)
     ranks.pprint()
+    ranks.saveAsTextFiles('out')
     print(" finishing the task")
     ssc.start()
     ssc.awaitTermination()
